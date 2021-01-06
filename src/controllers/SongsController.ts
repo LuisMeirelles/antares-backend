@@ -5,21 +5,26 @@ import {
 
 import db from '../database/connection';
 
-export interface UsersInterface {
+import { UsersInterface } from './UsersController';
+
+interface SongsInterface {
     id: number;
-    email: string;
-    username: string;
     name: string;
-    password?: string;
+    author: string;
+    musical_style: string;
+    url?: string;
+    message: string;
+    user_id?: number;
+    user: UsersInterface;
     created_at: Date;
 }
 
-export default class UsersController {
+export default class SongsController {
     async create(request: Request, response: Response): Promise<Response> {
         const trx = await db.transaction();
 
         try {
-            await trx<UsersInterface>('users')
+            await trx<SongsInterface>('songs')
                 .insert(request.body);
 
             await trx.commit();
@@ -29,7 +34,7 @@ export default class UsersController {
             await trx.rollback();
 
             return response.status(400).json({
-                message: 'Unexpected error while creating new user',
+                message: 'Unexpected error while creating new song',
                 error
             });
         }
@@ -39,34 +44,41 @@ export default class UsersController {
         const filters = request.query;
 
         try {
-            const users = await db<UsersInterface>('users')
+            const songs = await db<SongsInterface>('songs')
                 .where({ ...filters });
 
-            users.map(user => user.password = undefined);
-
-            return response.status(200).json(users);
+            return response.status(200).json(songs);
         } catch (error) {
             return response.status(400).json({
-                message: 'Unexpected error while list users',
+                message: 'Unexpected error while list songs',
                 error
             });
         }
     }
 
     async show(request: Request, response: Response): Promise<Response> {
-        const id = parseInt(request.params.id);
+        const id = request.params.id as unknown as number;
 
         try {
-            const user = await db<UsersInterface>('users')
+            const song = await db<SongsInterface>('songs')
                 .where({ id })
                 .first();
 
-            user ? user.password = undefined : null;
+            if(song) {
+                song.user = await db<UsersInterface>('users')
+                    .select('users.*')
+                    .join('songs', 'users.id', '=', 'songs.user_id')
+                    .first();
 
-            return response.status(200).json(user);
+                song.user_id = undefined;
+                song.user.password = undefined;
+            }
+
+            return response.status(200).json(song);
+
         } catch (error) {
             return response.status(400).json({
-                message: 'Unexpected error while show the user',
+                message: 'Unexpected error while show a songs',
                 error
             });
         }
@@ -78,7 +90,7 @@ export default class UsersController {
         const trx = await db.transaction();
 
         try {
-            await trx<UsersInterface>('users')
+            await trx<SongsInterface>('songs')
                 .update(request.body)
                 .where({ id });
 
@@ -89,7 +101,7 @@ export default class UsersController {
             await trx.rollback();
 
             return response.status(400).json({
-                message: 'Unexpected error while update new user',
+                message: 'Unexpected error while update new song',
                 error
             });
         }
@@ -98,17 +110,13 @@ export default class UsersController {
     async delete(request: Request, response: Response): Promise<Response> {
         const id = parseInt(request.params.id);
 
-        const trx = await db.transaction();
-
         try {
-            await trx<UsersInterface>('users')
+            await db<SongsInterface>('songs')
                 .delete()
                 .where({ id });
 
             return response.status(200).send();
         } catch (error) {
-            trx.rollback();
-
             return response.status(400).json({
                 message: 'Unexpected error while delete the user',
                 error
