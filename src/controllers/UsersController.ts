@@ -37,14 +37,13 @@ export default class UsersController {
 
     async index(request: Request, response: Response): Promise<Response> {
         const filters = request.query;
-        filters.password = undefined;
+        filters.password ? filters.password = undefined : null;
 
         try {
             const users = await db<UsersInterface>('users')
                 .where({ ...filters });
 
             users.map(user => user.password = undefined);
-
             return response.status(200).json(users);
         } catch (error) {
             return response.status(400).json({
