@@ -37,6 +37,7 @@ export default class UsersController {
 
     async index(request: Request, response: Response): Promise<Response> {
         const filters = request.query;
+        filters.password = undefined;
 
         try {
             const users = await db<UsersInterface>('users')
