@@ -15,4 +15,4 @@ app.use(express.json());
 
 app.use(routes);
 
-app.listen(process.env.SERVER_PORT);
+app.listen(process.env.PORT);
