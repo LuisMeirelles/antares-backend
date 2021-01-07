@@ -5,6 +5,7 @@
   "license": "MIT",
   "scripts": {
     "start": "tsnd --transpile-only --ignore-watch node_modules --respawn src/server.ts",
+    "build": "tsc --outDir build",
     "knex:migrate": "knex --knexfile knexfile.ts migrate:latest",
     "knex:rollback": "knex --knexfile knexfile.ts migrate:rollback"
   },
