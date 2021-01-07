@@ -6,6 +6,8 @@ import routes from './routes';
 
 dotenv.config();
 
+console.log(process.env);
+
 const app = express();
 
 app.use(cors());
