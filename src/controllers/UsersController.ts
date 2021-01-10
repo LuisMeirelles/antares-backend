@@ -2,15 +2,15 @@ import {
     Request,
     Response
 } from 'express';
-
 import db from '../database/connection';
+import bcrypt from 'bcryptjs';
 
 export interface UsersInterface {
     id: number;
     email: string;
     username: string;
     name: string;
-    password?: string;
+    password: string;
     created_at: Date;
 }
 
@@ -18,18 +18,23 @@ export default class UsersController {
     async create(request: Request, response: Response): Promise<Response> {
         const trx = await db.transaction();
 
+        const data = {
+            ...request.body,
+            password: await bcrypt.hash(request.body.password, 10)
+        };
+
         try {
             await trx<UsersInterface>('users')
-                .insert(request.body);
+                .insert(data);
 
             await trx.commit();
 
-            return response.status(201).send();
+            return response.status(201);
         } catch (error) {
             await trx.rollback();
 
             return response.status(400).json({
-                message: 'Unexpected error while creating new user',
+                message: 'unexpected error while creating new user',
                 error
             });
         }
@@ -37,17 +42,24 @@ export default class UsersController {
 
     async index(request: Request, response: Response): Promise<Response> {
         const filters = request.query;
+
         filters.password ? filters.password = undefined : null;
 
         try {
             const users = await db<UsersInterface>('users')
                 .where({ ...filters });
 
-            users.map(user => user.password = undefined);
-            return response.status(200).json(users);
+            return response.status(200).json(
+                users.map(
+                    user => ({
+                        ...user,
+                        password: undefined
+                    })
+                )
+            );
         } catch (error) {
             return response.status(400).json({
-                message: 'Unexpected error while list users',
+                message: 'unexpected error while listing users',
                 error
             });
         }
@@ -61,12 +73,13 @@ export default class UsersController {
                 .where({ id })
                 .first();
 
-            user ? user.password = undefined : null;
-
-            return response.status(200).json(user);
+            return response.status(200).json({
+                ...user,
+                password: undefined
+            });
         } catch (error) {
             return response.status(400).json({
-                message: 'Unexpected error while show the user',
+                message: 'unexpected error while showing the user',
                 error
             });
         }
@@ -82,14 +95,16 @@ export default class UsersController {
                 .update(request.body)
                 .where({ id });
 
-            trx.commit();
+            await trx.commit();
 
-            return response.status(200).send();
+            return response.status(200).json({
+                message: 'user updated successfully'
+            });
         } catch (error) {
             await trx.rollback();
 
             return response.status(400).json({
-                message: 'Unexpected error while update new user',
+                message: 'unexpected error while updating new user',
                 error
             });
         }
@@ -105,12 +120,16 @@ export default class UsersController {
                 .delete()
                 .where({ id });
 
-            return response.status(200).send();
+            await trx.commit();
+
+            return response.status(200).json({
+                message: 'user deleted successfully'
+            });
         } catch (error) {
             trx.rollback();
 
             return response.status(400).json({
-                message: 'Unexpected error while delete the user',
+                message: 'unexpected error while deleting the user',
                 error
             });
         }

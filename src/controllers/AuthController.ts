@@ -2,8 +2,8 @@ import {
     Request,
     Response
 } from 'express';
-
 import db from '../database/connection';
+import bcrypt from 'bcryptjs';
 
 import { UsersInterface } from './UsersController';
 
@@ -16,22 +16,30 @@ export default class AuthController {
 
         try {
             const result = await db<UsersInterface>('users')
-                .where({ email: user })
-                .orWhere({ username: user})
+                .where({
+                    email: user
+                })
+                .orWhere({
+                    username: user
+                })
                 .first();
 
-            if (result) {
-                if (result.password == password) {
-                    return response.status(200).send();
-                } else {
-                    return response.status(400).send({ message: 'Passwords don\'t match' });
-                }
-            } else {
-                return response.status(400).send({ message: 'User not found' });
+            if (!result) {
+                return response.status(400).send({
+                    message: 'user not found'
+                });
             }
+
+            if (!await bcrypt.compare(password, result.password)) {
+                return response.status(400).send({
+                    message: 'incorrect password'
+                });
+            }
+
+            return response.status(200);
         } catch (error) {
             return response.status(400).json({
-                message: 'Unexpected error while authenticate the user',
+                message: 'unexpected error while authenticating the user',
                 error
             });
         }
