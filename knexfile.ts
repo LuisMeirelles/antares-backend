@@ -1,7 +1,7 @@
 import path from 'path';
 
 const {
-    DATABASE_HOST,
+    CLEARDB_DATABASE_URL,
     DATABASE_USER,
     DATABASE_PASSWORD
 } = process.env;
@@ -27,7 +27,7 @@ export default {
     production: {
         client: 'mysql',
         connection: {
-            host: DATABASE_HOST,
+            host: CLEARDB_DATABASE_URL,
             user: DATABASE_USER,
             password: DATABASE_PASSWORD,
             database: 'antares'

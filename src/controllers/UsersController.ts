@@ -42,7 +42,7 @@ export default class UsersController {
 
     async index(request: Request, response: Response): Promise<Response> {
         const filters = request.query;
-
+        console.log(process.env);
         filters.password ? filters.password = undefined : null;
 
         try {
