@@ -3,7 +3,8 @@ import path from 'path';
 const {
     DATABASE_HOST,
     DATABASE_USER,
-    DATABASE_PASSWORD
+    DATABASE_PASSWORD,
+    DATABASE_NAME
 } = process.env;
 
 export default {
@@ -30,7 +31,7 @@ export default {
             host: DATABASE_HOST,
             user: DATABASE_USER,
             password: DATABASE_PASSWORD,
-            database: 'antares'
+            database: DATABASE_NAME
         },
         pool: {
             min: 2,
