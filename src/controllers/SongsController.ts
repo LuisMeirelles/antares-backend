@@ -69,12 +69,13 @@ export default class SongsController {
                     .select('users.*')
                     .join('songs', 'users.id', '=', 'songs.user_id')
                     .first();
-
-                song.user_id = undefined;
-                song.user.password = undefined;
             }
 
-            return response.status(200).json(song);
+            return response.status(200).json({
+                ...song,
+                user_id: undefined,
+                password: undefined
+            });
 
         } catch (error) {
             return response.status(400).json({
