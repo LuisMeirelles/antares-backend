@@ -29,7 +29,7 @@ export default class UsersController {
 
             await trx.commit();
 
-            return response.status(201);
+            return response.status(201).send();
         } catch (error) {
             await trx.rollback();
 
@@ -97,9 +97,7 @@ export default class UsersController {
 
             await trx.commit();
 
-            return response.status(200).json({
-                message: 'user updated successfully'
-            });
+            return response.status(200).send();
         } catch (error) {
             await trx.rollback();
 
@@ -122,9 +120,7 @@ export default class UsersController {
 
             await trx.commit();
 
-            return response.status(200).json({
-                message: 'user deleted successfully'
-            });
+            return response.status(200).send();
         } catch (error) {
             trx.rollback();
 

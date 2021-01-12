@@ -36,7 +36,7 @@ export default class AuthController {
                 });
             }
 
-            return response.status(200);
+            return response.status(200).send();
         } catch (error) {
             return response.status(400).json({
                 message: 'unexpected error while authenticating the user',
