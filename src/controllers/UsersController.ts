@@ -15,7 +15,7 @@ export interface UsersInterface {
 }
 
 export default class UsersController {
-    async create(request: Request, response: Response): Promise<Response> {
+    async store(request: Request, response: Response): Promise<Response> {
         const trx = await db.transaction();
 
         const data = {
