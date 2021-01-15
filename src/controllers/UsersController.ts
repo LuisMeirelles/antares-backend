@@ -92,7 +92,10 @@ export default class UsersController {
 
         try {
             await trx<UsersInterface>('users')
-                .update(request.body)
+                .update({
+                    ...request.body,
+                    password: await bcrypt.hash(request.body.password, 10)
+                })
                 .where({ id });
 
             await trx.commit();
