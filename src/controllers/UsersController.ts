@@ -2,8 +2,21 @@ import {
     Request,
     Response
 } from 'express';
-import db from '../database/connection';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
+
+import db from '../database/connection';
+
+dotenv.config();
+
+const generateToken = (params = {}): string => {
+    const SECRET = process.env.SECRET || '';
+
+    return jwt.sign(params, SECRET, {
+        expiresIn: 86400
+    });
+};
 
 export interface UsersInterface {
     id: number;
@@ -14,7 +27,8 @@ export interface UsersInterface {
     created_at: Date;
 }
 
-export default class UsersController {
+class UsersController {
+
     async store(request: Request, response: Response): Promise<Response> {
         const data = {
             ...request.body,
@@ -43,12 +57,15 @@ export default class UsersController {
             });
         } else {
             try {
-                await trx<UsersInterface>('users')
-                    .insert(data);
+                const id = await trx<UsersInterface>('users')
+                    .insert(data)
+                    .returning('id');
 
                 await trx.commit();
 
-                return response.status(201).send();
+                return response.status(201).json({
+                    token: generateToken({ id })
+                });
             } catch (error) {
                 await trx.rollback();
 
@@ -153,4 +170,48 @@ export default class UsersController {
             });
         }
     }
+
+    async auth(request: Request, response: Response): Promise<Response> {
+        const {
+            user,
+            password
+        } = request.body;
+
+        try {
+            const result = await db<UsersInterface>('users')
+                .where({
+                    email: user
+                })
+                .orWhere({
+                    username: user
+                })
+                .first();
+
+            if (!result) {
+                return response.status(400).send({
+                    message: 'user not found'
+                });
+            }
+
+            if (!await bcrypt.compare(password, result.password)) {
+                return response.status(400).send({
+                    message: 'incorrect password'
+                });
+            }
+
+            return response.status(200).json({
+                token: generateToken({
+                    id: result.id
+                })
+            });
+        } catch (error) {
+            console.log(error);
+            return response.status(400).json({
+                message: 'unexpected error while authenticating the user',
+                error
+            });
+        }
+    }
 }
+
+export default UsersController;
