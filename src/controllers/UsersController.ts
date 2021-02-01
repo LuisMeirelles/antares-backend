@@ -16,27 +16,47 @@ export interface UsersInterface {
 
 export default class UsersController {
     async store(request: Request, response: Response): Promise<Response> {
-        const trx = await db.transaction();
-
         const data = {
             ...request.body,
             password: await bcrypt.hash(request.body.password, 10)
         };
 
-        try {
-            await trx<UsersInterface>('users')
-                .insert(data);
+        const trx = await db.transaction();
 
-            await trx.commit();
+        const emailExists = await trx<UsersInterface>('users')
+            .where({
+                email: data.email
+            }).first();
 
-            return response.status(201).send();
-        } catch (error) {
-            await trx.rollback();
+        const usernameExists = await trx<UsersInterface>('users')
+            .where({
+                username: data.username
+            }).first();
 
+        if (emailExists) {
             return response.status(400).json({
-                message: 'unexpected error while creating new user',
-                error
+                message: 'email already registered'
             });
+        } else if (usernameExists) {
+            return response.status(400).json({
+                message: 'username already registered'
+            });
+        } else {
+            try {
+                await trx<UsersInterface>('users')
+                    .insert(data);
+
+                await trx.commit();
+
+                return response.status(201).send();
+            } catch (error) {
+                await trx.rollback();
+
+                return response.status(400).json({
+                    message: 'unexpected error while creating new user',
+                    error
+                });
+            }
         }
     }
 
