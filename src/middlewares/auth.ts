@@ -8,8 +8,6 @@ import jwt from 'jsonwebtoken';
 
 import dotenv from 'dotenv';
 
-dotenv.config();
-
 interface TokenPayload {
     id: string,
     iat: number,
@@ -31,6 +29,8 @@ export default (req: Request, res: Response, next: NextFunction): Response | voi
         return res.status(401).send({ error: 'malformed token' });
     }
 
+    dotenv.config();
+    
     try {
         const SECRET = process.env.SECRET || '';
 

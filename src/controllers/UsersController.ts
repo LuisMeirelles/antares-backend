@@ -2,15 +2,16 @@ import {
     Request,
     Response
 } from 'express';
+
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 
 import db from '../database/connection';
 
-dotenv.config();
-
 const generateToken = (params = {}): string => {
+    dotenv.config();
+
     const SECRET = process.env.SECRET || '';
 
     return jwt.sign(params, SECRET, {
