@@ -3,19 +3,27 @@ import {
     Response,
     NextFunction
 } from 'express';
+
 import jwt from 'jsonwebtoken';
+
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-export default (req: Request, res: Response, next: NextFunction): Response<any> | void => {
-    const authHeader = req.headers.authorization;
+interface TokenPayload {
+    id: string,
+    iat: number,
+    exp: number
+}
 
-    if (!authHeader) {
+export default (req: Request, res: Response, next: NextFunction): Response | void => {
+    const { authorization } = req.headers;
+
+    if (!authorization) {
         return res.status(401).send({ error: 'no token provided' });
     }
 
-    const parts = authHeader.split(' ');
+    const parts = authorization.split(' ');
     const [scheme, token] = parts;
 
     if (parts.length !== 2 || !/^Bearer$/i.test(scheme)) {
@@ -23,15 +31,17 @@ export default (req: Request, res: Response, next: NextFunction): Response<any> 
         return res.status(401).send({ error: 'malformed token' });
     }
 
-    const SECRET = process.env.SECRET || '';
+    try {
+        const SECRET = process.env.SECRET || '';
 
-    jwt.verify(token, SECRET, (err, decoded) => {
-        if (err) {
-            return res.status(401).send({ error: 'invalid token' });
-        }
+        const data = jwt.verify(token, SECRET);
 
-        req.userId = decoded?.id;
+        const { id } = data as TokenPayload;
 
-        return next();
-    });
+        req.userId = id;
+
+        next();
+    } catch {
+        return res.status(401).send({ error: 'invalid token' });
+    }
 };
