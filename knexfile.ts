@@ -8,12 +8,12 @@ const {
 } = process.env;
 
 export default {
-    'development': {
+    development: {
         client: 'mysql',
         connection: {
             host: '127.0.0.1',
             user: 'root',
-            password: 'mywordismypassword',
+            password: '',
             database: 'antares'
         },
         pool: {
@@ -22,10 +22,10 @@ export default {
         },
         migrations: {
             tableName: 'knex_migrations',
-            directory:  path.join(path.dirname('./'), 'src', 'database', 'migrations')
+            directory: path.join(path.dirname('./'), 'src', 'database', 'migrations')
         }
     },
-    'production': {
+    production: {
         client: 'mysql',
         connection: {
             host: DATABASE_HOST,
@@ -39,7 +39,7 @@ export default {
         },
         migrations: {
             tableName: 'knex_migrations',
-            directory:  path.join(path.dirname('./'), 'src', 'database', 'migrations')
+            directory: path.join(path.dirname('./'), 'src', 'database', 'migrations')
         }
     }
 };
